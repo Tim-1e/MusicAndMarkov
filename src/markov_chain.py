@@ -32,10 +32,15 @@ class MarkovChain:
         self.chain[from_note][self._serialize(to_note, duration)] += 1
         self.sums[from_note] += 1
 
+    def debug(self):
+        for note in self.chain.keys():
+            print(note,"==>",self.chain[note])
+
     def get_next(self, seed_note):
         if seed_note is None or seed_note not in self.chain:
             random_chain = self.chain[random.choice(list(self.chain.keys()))]
-            return random.choice(list(random_chain.keys()))
+            note = random.choice(list(random_chain.keys()))
+            return note
         next_note_counter = random.randint(0, self.sums[seed_note])
         for note, frequency in self.chain[seed_note].items():
             next_note_counter -= frequency
