@@ -46,17 +46,16 @@ class Generator:
 
     def generate(self, filename):
         with mido.midifiles.MidiFile() as midi:
-            for one_chain in self.markov_chain:
-                track = mido.MidiTrack()
-                last_note = None
-                # self.markov_chain.debug()
-                # Generate a sequence of 100 notes
-                for i in range(1000):
-                    new_note = one_chain.get_next(last_note)
-                    # print(last_note,"==>",new_note)
-                    track.extend(self._note_to_messages(new_note))
-                    last_note = new_note.note
-                midi.tracks.append(track)
+            track = mido.MidiTrack()
+            last_note = None
+            # self.markov_chain.debug()
+            # Generate a sequence of 100 notes
+            for i in range(1000):
+                new_note = self.markov_chain.get_next(last_note)
+                # print(last_note,"==>",new_note)
+                track.extend(self._note_to_messages(new_note))
+                last_note = new_note.note
+            midi.tracks.append(track)
             midi.save(filename)
 
 if __name__ == "__main__":
