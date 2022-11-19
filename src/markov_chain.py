@@ -13,35 +13,27 @@ class MarkovChain:
         self.chain = defaultdict(Counter)
         self.sums = defaultdict(int)
 
-    @staticmethod
-    def create_from_dict(dict):
-        m = MarkovChain()
-        # bugged!
-        for from_note, to_notes in dict.items():
-            for k, v in to_notes.items():
-                m.add(from_note, k, v)
-        return m
-
     def _serialize(self, note, duration):
         return Note(note, duration)
 
     def __str__(self):
         return str(self.get_chain())
 
-    def add(self, from_note, to_note, duration):
-        self.chain[from_note][self._serialize(to_note, duration)] += 1
+    def add(self, from_note, to_note):
+        self.chain[from_note][to_note] += 1
         self.sums[from_note] += 1
 
     def debug(self):
+        print("we come to debug")
         for note in self.chain.keys():
-            print(note,"==>",self.chain[note])
+            print(note,"==>",self.chain[note],"And sum is",self.sums[note])
 
     def get_next(self, seed_note):
         if seed_note is None or seed_note not in self.chain:
             random_chain = self.chain[random.choice(list(self.chain.keys()))]
             note = random.choice(list(random_chain.keys()))
             return note
-        next_note_counter = random.randint(0, self.sums[seed_note])
+        next_note_counter = random.randint(1, self.sums[seed_note])
         for note, frequency in self.chain[seed_note].items():
             next_note_counter -= frequency
             if next_note_counter <= 0:
@@ -79,13 +71,13 @@ if __name__ == '__main__':
     import sys
     if len(sys.argv) == 2 and sys.argv[1] == 'test':
         m = MarkovChain()
-        m.add(12, 14, 200)
-        m.add(12, 15, 200)
-        m.add(14, 25, 200)
-        m.add(12, 14, 200)
+        m.add(12, 14)
+        m.add(12, 15)
+        m.add(14, 25)
+        m.add(12, 14)
         n = MarkovChain()
-        n.add(10, 13, 100)
-        n.add(12, 14, 200)
+        n.add(10, 13)
+        n.add(12, 14)
         m.merge(n)
         print(m)
         m.print_as_matrix()

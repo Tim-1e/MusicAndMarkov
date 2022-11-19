@@ -2,70 +2,63 @@
 # This class handles the generation of a new song given a markov chain
 # containing the note transitions and their frequencies.
 
-from markov_chain import MarkovChain
+from myparser import Parser
 
 import random
 import mido
 
 class Generator:
 
-    def __init__(self, markov_chain):
-        self.markov_chain = markov_chain
+    def __init__(self, Parser):
+        self.Parser = Parser
 
     @staticmethod
-    def load(markov_chain):
+    def load(Parser):
         #assert isinstance(markov_chain, MarkovChain)
-        return Generator(markov_chain)
+        return Generator(Parser)
 
-    def _note_to_messages(self, notes):
-        message = []
-        for note in notes.note:
-            message.append(
-                mido.Message('note_on', note = note[0],velocity = note[1],
-                         time=0),
-                )
-        for (i,note) in enumerate(notes.note):
-            if i==0:
-                message.append(
-                    mido.Message('note_off', note = note[0],velocity = 0,
-                            time=notes.duration)
-                )
-            else:
-                message.append(
-                    mido.Message('note_off', note = note[0],velocity = 0,
-                            time=0)
-                )
-        return message
-        # return [
-        #     mido.Message('note_on', note = note,velocity = 127,
-        #                  time=0),
-        #     mido.Message('note_off', note = note,velocity = 0,
-        #                  time=note.duration)
-        #     # mido.Message('note_on', note = note.note[0],velocity = note.note[1],time = note.duration)
-        # ]
+    def _tuple_to_messages(self, tuple):
+        return mido.Message("note_on", note = tuple[0],velocity = tuple[1],
+                     time=tuple[2]),
+
 
     def generate(self, filename):
         with mido.midifiles.MidiFile() as midi:
-            track = mido.MidiTrack()
-            last_note = None
-            # self.markov_chain.debug()
-            # Generate a sequence of 100 notes
-            for i in range(1000):
-                new_note = self.markov_chain.get_next(last_note)
-                # print(last_note,"==>",new_note)
-                track.extend(self._note_to_messages(new_note))
-                last_note = new_note.note
-            midi.tracks.append(track)
+            Chunk=self.Parser.Meters
+            Dic=self.Parser.Dic
+            Markev=[]
+            last_meter = None
+            for i in range(100):
+                new_meter = self.Parser.markov_chain.get_next(last_meter)
+                Markev.append(new_meter)
+                last_meter = new_meter
+            for trace in range(len(Chunk)):
+                track = mido.MidiTrack()
+                for meter in Markev:
+                    MeterInKmean = Dic[meter]
+                    SelectMeter=Chunk[trace][MeterInKmean[random.randint(0,len(MeterInKmean)-1)]]
+                    for message_tuple in SelectMeter:
+                        track.extend(self._tuple_to_messages(message_tuple))
+                midi.tracks.append(track)
+            midi.save(filename)
+
+    def generate_test(self, filename):
+        with mido.midifiles.MidiFile() as midi:
+            Chunk=self.Parser.Meters
+            for trace in range(len(Chunk)):
+                track = mido.MidiTrack()
+                for meter in range(self.Parser.meternum):
+                    SelectMeter=Chunk[trace][meter]
+                    for message_tuple in SelectMeter:
+                        track.extend(self._tuple_to_messages(message_tuple))
+                midi.tracks.append(track)
             midi.save(filename)
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) == 3:
-        # Example usage:
-        # python generator.py <in.mid> <out.mid>
-        from myparser import Parser
-        chain = Parser(sys.argv[1]).get_chain()
-        Generator.load(chain).generate(sys.argv[2])
+        loadParser = Parser(sys.argv[1])
+        Generator.load(loadParser).generate(sys.argv[2])
         print('Generated markov chain')
     else:
         print('Invalid number of arguments:')
